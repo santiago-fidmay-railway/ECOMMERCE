@@ -72,12 +72,13 @@ O GitHub Actions contém a mesma rotina com MySQL 8.4. A execução remota depen
 - [CRUD administrativo: operações e regras](docs/crud-administrativo.md)
 - [Evolução e decisões](docs/evolucao.md)
 - [Manual e treinamento](docs/implantacao/README.md)
+- [Hospedagem: GitHub, Railway e Vercel](docs/hospedagem.md)
 - [Requisições REST de exemplo](backend/rest_client.http)
 
 ## Build local e limites atuais
 
 `npm run build` prepara **dist/** somente com os arquivos públicos. `API_BASE_URL` configura a API no build e precisa terminar em `/api`; o padrão é `http://localhost:3001/api`. `npm run preview` serve o resultado localmente. A pasta `dist/` é gerada e pode ser removida; execute o build novamente antes da prévia.
 
-As configurações específicas de hospedagem foram removidas; o projeto está preparado para execução local. Cobrança real, emissão fiscal, consulta automática de transportadoras e envio de alertas por e-mail não fazem parte desta demonstração. Os avisos de reposição aparecem na coleção. A recuperação de senha por e-mail está implementada, mas só funciona após configurar SMTP e `FRONTEND_URL`.
+A publicação em Railway e Vercel está descrita em [docs/hospedagem.md](docs/hospedagem.md). Cobrança real, emissão fiscal, consulta automática de transportadoras e envio de alertas por e-mail não fazem parte desta demonstração. Os avisos de reposição aparecem na coleção. A recuperação de senha por e-mail está implementada, mas só funciona após configurar SMTP e `FRONTEND_URL`.
 
 Faça `npm run backup` na pasta `backend` antes de alterações de dados; a exportação local contém esquema e registros e fica em `.backups/`, ignorada pelo Git. Na hospedagem, configure backups persistentes do MySQL; o sistema de arquivos do container não é um local permanente para guardá-los.
