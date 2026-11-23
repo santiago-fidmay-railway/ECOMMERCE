@@ -104,6 +104,7 @@ Não configure `PORT`: o Railway injeta a porta e o `server.js` a lê de `proces
 
 1. Em <https://vercel.com>, **Add New → Project** e importe o repositório.
 2. Deixe **Root Directory** na raiz. O `vercel.json` já define `npm run build` e a saída `dist/`.
+   O build copia as imagens de produtos de `backend/imagens/` para `dist/imagens/`, mantendo as URLs públicas `/imagens/...` usadas pelo frontend.
 3. Em **Environment Variables**, configure:
 
 | Variável | Valor |

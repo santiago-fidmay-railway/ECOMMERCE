@@ -14,7 +14,8 @@ async function build() {
         await fs.cp(path.join(root, 'frontend', pasta), path.join(destino, pasta), { recursive: true })
     }
     await fs.copyFile(path.join(root, 'frontend/index.html'), path.join(destino, 'index.html'))
-    for (const pasta of ['imagens', 'videos']) await fs.cp(path.join(root, pasta), path.join(destino, pasta), { recursive: true })
+    await fs.cp(path.join(root, 'backend', 'imagens'), path.join(destino, 'imagens'), { recursive: true })
+    await fs.cp(path.join(root, 'videos'), path.join(destino, 'videos'), { recursive: true })
     await fs.writeFile(path.join(destino, 'js/config.js'), 'window.SGFRUN_CONFIG = ' + JSON.stringify({ apiBase: url.href.replace(/\/$/, '') }) + ';\n')
     const sitemapUrl = process.env.SITE_URL ? new URL(process.env.SITE_URL) : null
     const rotas = ['', 'pages/catalogo.html', 'pages/quiz.html', 'pages/comparar.html', 'pages/marcas.html']

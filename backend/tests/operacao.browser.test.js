@@ -8,7 +8,7 @@ let a, browser, front, base
 before(async () => {
     a = await require('./helpers/app').ambiente()
     const express = require('express'), app = express(), root = path.join(__dirname, '../..')
-    app.use('/imagens', express.static(path.join(root, 'imagens')))
+    app.use('/imagens', express.static(path.join(root, 'backend', 'imagens')))
     app.use('/videos', express.static(path.join(root, 'videos')))
     app.use(express.static(path.join(root, 'frontend')))
     front = await new Promise(resolve => { const s = app.listen(0,'127.0.0.1',()=>resolve(s)) })

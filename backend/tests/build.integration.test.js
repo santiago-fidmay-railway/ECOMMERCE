@@ -9,6 +9,7 @@ test('build contém só arquivos públicos, configuração da API e links locais
     const dir=path.join(root,'dist')
     const config=await fs.readFile(path.join(dir,'js/config.js'),'utf8')
     assert.match(config,/https:\/\/api.example.test\/api/)
+    await fs.access(path.join(dir,'imagens','boston13-1.webp'))
     for(const nome of ['.env','backend','.backups','node_modules']) {
         await assert.rejects(fs.access(path.join(dir,nome)))
     }
