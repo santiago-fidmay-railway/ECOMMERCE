@@ -129,6 +129,22 @@ Se a conta já existia antes de configurar a variável, saia e entre novamente: 
 
 A senha é sempre definida por você no cadastro; o repositório não publica nenhuma senha padrão.
 
+## Imagens enviadas pela administração
+
+A imagem principal e a galeria aceitam arquivos JPG, PNG, WebP e AVIF estáticos, de até 5 MB e 25 megapixels cada. A seleção mostra uma prévia; o upload acontece ao salvar o produto. A galeria aceita até 19 fotos, reservando uma mídia para o review. Os links continuam disponíveis como alternativa. Remover uma foto do formulário remove sua associação ao produto, sem apagar o arquivo físico, pois ele pode estar em outro produto ou no histórico de pedidos.
+
+Somente administradores autenticados podem enviar arquivos. A API decodifica as imagens, remove metadados e gera WebP de até 2000 × 2000 pixels. As referências salvas são `/api/midias/ARQUIVO.webp`; o frontend usa o domínio da API configurada, tanto localmente quanto na Vercel.
+
+**No computador:** as fotos ficam em `backend/uploads/`, fora do Git e da saída `dist/`. O diretório pode ser substituído por `UPLOAD_DIR` no `.env` local. Inicie a API e o frontend com `npm run dev`; se a porta 5500 estiver ocupada, use `$env:FRONTEND_PORT='5501'; npm.cmd run dev` no PowerShell.
+
+**Antes de publicar a versão com uploads:** adicione um volume ao serviço **ECOMMERCE (API)** no Railway, distinto do volume do MySQL, montado em `/data`. Configure `UPLOAD_DIR=/data/uploads` nas variáveis desse serviço e aplique as alterações. O volume estará disponível em tempo de execução; o build não deve escrever nele. Em produção, o envio fica indisponível se nenhum diretório persistente estiver configurado (`UPLOAD_DIR` ou `RAILWAY_VOLUME_MOUNT_PATH`). O restante da loja continua funcionando. Configurar um caminho sem montar o volume não garante persistência.
+
+Veja a [documentação de volumes do Railway](https://docs.railway.com/volumes). Faça backup da pasta de uploads junto com o banco. Fotos enviadas no computador não são transferidas por `git push`; envie-as novamente no ambiente de destino ou copie os arquivos para o volume se também estiver migrando os registros locais. Alterar a pasta de uploads exige copiar as imagens existentes para a nova pasta.
+
+## Gráficos administrativos
+
+A visão geral apresenta valor mensal confirmado, subtotal por categoria, pedidos por status, os dez produtos mais vendidos por unidades e situação do estoque. Os filtros de data usam o dia em São Paulo e a data de criação do pedido. O ranking exclui pedidos pendentes e cancelados; o gráfico por status inclui todos. O estoque mostra o saldo atual dos produtos ativos, independentemente do período. Tabelas e exportação CSV permitem consultar os mesmos dados, inclusive quando não há valores para desenhar o gráfico.
+
 ## Manutenção
 
 - Cada `git push` na branch principal redeploya os dois serviços.

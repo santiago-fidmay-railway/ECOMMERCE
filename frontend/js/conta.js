@@ -52,10 +52,7 @@ const Conta = {
     img.alt = produto.nome || 'Produto';
     img.loading = 'lazy';
     const fallback = Auth.url('assets/images/placeholder.svg');
-    try {
-      const url = new URL(produto.imagem_url || fallback, window.location.href);
-      img.src = ['http:', 'https:'].includes(url.protocol) ? url.href : fallback;
-    } catch { img.src = fallback; }
+    img.src = Auth.imagem(produto.imagem_url);
     img.onerror = () => { img.onerror = null; img.src = fallback; };
     return img;
   }

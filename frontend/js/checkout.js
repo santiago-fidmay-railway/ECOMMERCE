@@ -55,7 +55,7 @@ function renderizarResumo(resumo) {
     linha.className = 'checkout-item';
     const imagem = document.createElement('img');
     imagem.className = 'checkout-item-img';
-    imagem.src = item.imagem_url || '../assets/images/placeholder.svg';
+    imagem.src = Auth.imagem(item.imagem_url);
     imagem.alt = item.nome;
     const info = document.createElement('div');
     info.className = 'checkout-item-info';

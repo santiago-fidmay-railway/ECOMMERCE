@@ -9,6 +9,9 @@ const { movimentarVariante, saldoProduto } = require('../services/estoque.servic
 const { expirarReservas } = require('../services/pedido.service')
 
 router.use(autenticar, apenasAdmin)
+router.post('/imagens', require('express-rate-limit').rateLimit({ windowMs: 15 * 60000, limit: 100, standardHeaders: 'draft-8', legacyHeaders: false, message: { erro: 'Limite de envio de imagens atingido. Aguarde alguns minutos.' } }),
+    require('express').raw({ type: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'], limit: require('../services/midia.service').MAX_BYTES }),
+    handler(async (req, res) => res.status(201).json(await require('../services/midia.service').salvarImagem(req.body))))
 router.post('/pedidos', require('../controllers/pedidos.controller').criarAdministrativo)
 router.get('/categorias', handler(async (req, res) => res.json({ categorias: await Categoria.findAll({ order: [['nome', 'ASC']] }) })))
 router.get('/usuarios', handler(async (req, res) => res.json({ usuarios: await Usuario.findAll({ attributes: { exclude: ['senha'] }, order: [['codUsuario', 'DESC']], limit: 100 }) })))

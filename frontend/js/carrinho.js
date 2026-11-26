@@ -182,7 +182,7 @@ function renderizarCarrinhoNaPagina() {
     linha.className = 'cart-item';
     const imagem = document.createElement('img');
     imagem.className = 'cart-item-img';
-    imagem.src = item.imagem_url || '../assets/images/placeholder.svg';
+    imagem.src = Auth.imagem(item.imagem_url);
     imagem.alt = item.nome;
     const detalhes = document.createElement('div');
     detalhes.className = 'cart-item-details';

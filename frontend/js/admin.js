@@ -30,6 +30,7 @@ function abrirTabAdmin(nome) {
 }
 document.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.requireAdmin()) return;
+  ImagensAdmin.iniciar();
   document.querySelectorAll('[data-tab]').forEach(btn => { btn.onclick = () => abrirTabAdmin(btn.dataset.tab); });
   document.getElementById('relatorioForm').onsubmit = event => { event.preventDefault(); executarAdmin(carregarRelatoriosAdmin, event.submitter); };
   document.getElementById('exportarRelatorio').onclick = exportarRelatorioAdmin;
@@ -57,18 +58,36 @@ function preencherSelectsAdmin() {
 }
 async function carregarRelatoriosAdmin() {
   const params = new URLSearchParams(); if (valorAdmin('inicio')) params.set('inicio', valorAdmin('inicio')); if (valorAdmin('fim')) params.set('fim', valorAdmin('fim'));
-  const [dashboard, mensal, categorias, estoque] = await Promise.all(['dashboard', 'faturamento', 'vendas', 'estoque'].map(rota => Api.get(`/relatorios/${rota}?${params}`)));
+  const [dashboard, mensal, categorias, estoque, status, vendidos] = await Promise.all(['dashboard', 'faturamento', 'vendas', 'estoque', 'pedidos-status', 'mais-vendidos'].map(rota => Api.get(`/relatorios/${rota}?${params}`)));
   const indicadores = document.getElementById('adminIndicadores'); indicadores.replaceChildren();
   for (const [nome, valor] of [['Produtos ativos', dashboard.produtos], ['Pedidos no período', dashboard.pedidos], ['Valor confirmado (demo)', Loja.moeda(dashboard.faturamento_total)], ['Opções com estoque crítico', dashboard.estoque_critico]]) {
     const card = Loja.el('article', 'admin-metric'); card.append(Loja.el('span', 'conta-muted', nome), Loja.el('strong', '', valor)); indicadores.appendChild(card);
   }
   graficosAdmin.forEach(chart => chart.destroy()); graficosAdmin = [];
-  const criar = (id, labels, valores, titulo, tipo) => new Chart(document.getElementById(id), { type: tipo, data: { labels, datasets: [{ label: titulo, data: valores, backgroundColor: ['#3b82f6', '#6366f1', '#14b8a6', '#f59e0b', '#a78bfa'], borderColor: '#60a5fa', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#a0a0b4' } }, x: { ticks: { color: '#a0a0b4' } } } } });
+  const criar = (id, labels, valores, titulo, tipo, horizontal = false) => {
+    const canvas = document.getElementById(id), vazio = document.getElementById(id + 'Vazio');
+    const temDados = valores.some(v => Number(v) > 0);
+    canvas.hidden = !temDados; vazio.hidden = temDados;
+    if (!temDados || typeof Chart === 'undefined') {
+      if (typeof Chart === 'undefined') { canvas.hidden = true; vazio.hidden = false; vazio.textContent = 'Gráfico indisponível. Consulte os dados na tabela abaixo.'; }
+      return null;
+    }
+    const circular = tipo === 'doughnut';
+    return new Chart(canvas, { type: tipo, data: { labels, datasets: [{ label: titulo, data: valores, backgroundColor: ['#3b82f6', '#6366f1', '#14b8a6', '#f59e0b', '#a78bfa', '#ef4444'], borderColor: '#60a5fa', borderWidth: circular ? 0 : 2, tension: 0.3, fill: false }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, indexAxis: horizontal ? 'y' : 'x', plugins: { legend: { display: circular, position: 'bottom', labels: { color: '#c7c7d9', padding: 16 } } }, ...(circular ? { cutout: '65%' } : { scales: { y: { beginAtZero: true, ticks: { color: '#a0a0b4', ...(horizontal ? {} : { precision: tipo === 'bar' && id === 'chartVendidos' ? 0 : undefined }) }, grid: { color: '#ffffff0d' } }, x: { beginAtZero: true, ticks: { color: '#a0a0b4', ...(horizontal ? { precision: 0 } : {}) }, grid: { color: '#ffffff0d' } } } }) } });
+  };
   graficosAdmin.push(criar('chartMensal', mensal.dados.map(d => d.mes_label), mensal.dados.map(d => Number(d.faturamento)), 'Valor confirmado (R$)', 'line'));
   graficosAdmin.push(criar('chartCategoria', categorias.dados.map(d => d.categoria), categorias.dados.map(d => Number(d.faturamento)), 'Subtotal (R$)', 'bar'));
+  const nomesStatus = { PENDENTE: 'Pendente', CONFIRMADO: 'Confirmado', EM_SEPARACAO: 'Em separação', ENVIADO: 'Enviado', ENTREGUE: 'Entregue', CANCELADO: 'Cancelado' };
+  graficosAdmin.push(criar('chartStatus', status.dados.map(d => nomesStatus[d.status] || d.status), status.dados.map(d => Number(d.quantidade)), 'Pedidos', 'doughnut'));
+  graficosAdmin.push(criar('chartVendidos', vendidos.dados.map(d => d.produto), vendidos.dados.map(d => Number(d.quantidade)), 'Unidades vendidas', 'bar', true));
+  const estoqueLabels = ['Sem estoque', 'Crítico', 'Baixo', 'Normal'], estoqueValores = ['sem_estoque', 'critico', 'baixo', 'ok'].map(chave => Number(estoque.resumo[chave]));
+  graficosAdmin.push(criar('chartEstoque', estoqueLabels, estoqueValores, 'Produtos ativos', 'doughnut'));
+  graficosAdmin = graficosAdmin.filter(Boolean);
   const area = document.getElementById('relatorioTabela'); area.replaceChildren();
   area.append(Loja.el('h3', '', 'Dados dos gráficos'), tabelaAdmin(['Mês', 'Pedidos confirmados', 'Valor (demo)'], mensal.dados.map(d => [d.mes_label, d.total_pedidos, Loja.moeda(d.faturamento)])), tabelaAdmin(['Categoria', 'Unidades', 'Subtotal'], categorias.dados.map(d => [d.categoria, d.total_itens, Loja.moeda(d.faturamento)])), Loja.el('h3', 'mt-lg', 'Resumo do estoque'), tabelaAdmin(['Produto', 'Saldo', 'Situação'], estoque.dados.map(d => [d.produto, d.quantidade, d.situacao])));
   dadosRelatorio = [['Mês', 'Pedidos confirmados', 'Valor demonstrativo'], ...mensal.dados.map(d => [d.mes_label, d.total_pedidos, d.faturamento]), [], ['Categoria', 'Unidades', 'Subtotal antes de desconto'], ...categorias.dados.map(d => [d.categoria, d.total_itens, d.faturamento])];
+  area.append(Loja.el('h3', 'mt-lg', 'Pedidos por status'), tabelaAdmin(['Status', 'Pedidos'], status.dados.map(d => [nomesStatus[d.status] || d.status, d.quantidade])), Loja.el('h3', 'mt-lg', 'Produtos mais vendidos'), tabelaAdmin(['Produto', 'Unidades', 'Subtotal (demo)'], vendidos.dados.map(d => [d.produto, d.quantidade, Loja.moeda(d.subtotal)])));
+  dadosRelatorio.push([], ['Status', 'Pedidos'], ...status.dados.map(d => [nomesStatus[d.status] || d.status, d.quantidade]), [], ['Produto', 'Unidades', 'Subtotal (demo)'], ...vendidos.dados.map(d => [d.produto, d.quantidade, d.subtotal]), [], ['Produto', 'Saldo atual', 'Situação'], ...estoque.dados.map(d => [d.produto, d.quantidade, d.situacao]));
 }
 function exportarRelatorioAdmin() {
   const csv = dadosRelatorio.map(row => row.map(value => { let str = String(value ?? ''); if (/^[\s]*[=+\-@]/.test(str)) str = "'" + str; return '"' + str.replaceAll('"', '""') + '"'; }).join(';')).join('\r\n');
@@ -83,7 +102,7 @@ async function carregarProdutosAdmin() {
   adminProdutos.forEach(p => { const opt = Loja.el('option', '', p.nome); opt.value = p.codProduto; select.appendChild(opt); });
   if (adminProdutos.some(p => String(p.codProduto) === atual)) select.value = atual;
 }
-function limparProdutoAdmin() { document.getElementById('produtoForm').reset(); document.getElementById('produtoId').value = ''; document.getElementById('produtoFormTitle').textContent = 'Novo produto'; document.getElementById('produtoSalvarCompleto').hidden = true; }
+function limparProdutoAdmin() { document.getElementById('produtoForm').reset(); document.getElementById('produtoId').value = ''; document.getElementById('produtoFormTitle').textContent = 'Novo produto'; document.getElementById('produtoSalvarCompleto').hidden = true; ImagensAdmin.limpar(); }
 function editarProdutoAdmin(p) {
   limparProdutoAdmin(); const dados = { produtoId: p.codProduto, produtoNome: p.nome, produtoMarca: p.marca, produtoCategoria: p.idCategoria, produtoCodigo: p.codigo_produto, produtoPreco: p.preco, produtoPromo: p.preco_promocional, produtoImagem: p.imagem_url, produtoDescricao: p.descricao };
   document.getElementById('produtoSalvarCompleto').hidden = false;
@@ -92,6 +111,7 @@ function editarProdutoAdmin(p) {
   const review = (p.midias || []).find(m => m.tipo === 'REVIEW'); dados.produtoReview = review?.url; dados.produtoCredito = review?.credito;
   dados.produtoImagens = (p.midias || []).filter(m => m.tipo === 'IMAGEM').sort((a,b) => a.ordem-b.ordem).map(m => m.url).join('\n');
   for (const [id, valor] of Object.entries(dados)) document.getElementById(id).value = valor ?? '';
+  ImagensAdmin.atualizar();
   document.getElementById('produtoAtivo').checked = p.ativo; document.getElementById('produtoDestaque').checked = p.destaque;
   [...document.getElementById('fichaFinalidade').options].forEach(opt => { opt.selected = ficha.finalidades?.includes(opt.value) || false; });
   document.getElementById('produtoFormTitle').textContent = `Editar ${p.nome}`; document.getElementById('produtoForm').scrollIntoView({ behavior: 'smooth' });
@@ -99,6 +119,7 @@ function editarProdutoAdmin(p) {
 async function salvarProdutoAdmin(event) {
   event.preventDefault(); const campos = document.getElementById('produtoCampos'); campos.disabled = true;
   await executarAdmin(async () => {
+    await ImagensAdmin.salvar();
     const ficha = {};
     if (valorAdmin('fichaPeso')) ficha.peso_g = Number(valorAdmin('fichaPeso')); if (valorAdmin('fichaDrop')) ficha.drop_mm = Number(valorAdmin('fichaDrop'));
     if (valorAdmin('fichaPlaca')) ficha.placa = valorAdmin('fichaPlaca') === 'true';

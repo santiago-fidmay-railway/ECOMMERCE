@@ -89,7 +89,7 @@ for (const viewport of [{ width:1366, height:768 }, { width:390, height:844 }]) 
         try {
             await page.goto(base+'pages/admin.html')
             await page.waitForSelector('#adminIndicadores .admin-metric')
-            assert.equal(await page.locator('canvas').count(),2)
+            assert.equal(await page.locator('canvas').count(),5)
             await page.screenshot({path:path.join(os.tmpdir(),`sgfrun-admin-graficos-${viewport.width}.png`),fullPage:true})
             await page.getByRole('button',{name:'Catálogo',exact:true}).click()
             await page.getByRole('button',{name:'Editar',exact:true}).first().click()

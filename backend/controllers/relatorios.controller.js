@@ -28,4 +28,12 @@ const situacaoEstoque = handler(async (req,res) => {
     const dados = await db.query("SELECT p.nome produto,p.marca,c.nome categoria,e.quantidade,e.quantidade_minima,CASE WHEN e.quantidade=0 THEN 'SEM_ESTOQUE' WHEN e.quantidade<=e.quantidade_minima THEN 'CRITICO' WHEN e.quantidade<=e.quantidade_minima*2 THEN 'BAIXO' ELSE 'OK' END situacao FROM estoque e JOIN produtos p ON e.idProduto=p.codProduto JOIN categorias c ON p.idCategoria=c.codCategoria WHERE p.ativo=1 ORDER BY e.quantidade", { type: QueryTypes.SELECT })
     res.json({ dados, resumo: { total: dados.length, sem_estoque: dados.filter(d=>d.situacao==='SEM_ESTOQUE').length, critico: dados.filter(d=>d.situacao==='CRITICO').length, baixo: dados.filter(d=>d.situacao==='BAIXO').length, ok: dados.filter(d=>d.situacao==='OK').length } })
 })
-module.exports={dashboard,vendasPorCategoria,faturamentoMensal,situacaoEstoque}
+const pedidosPorStatus = handler(async (req, res) => {
+    const dados = await db.query('SELECT status, COUNT(*) quantidade FROM pedidos WHERE dataPedido BETWEEN :inicio AND :fim GROUP BY status ORDER BY status', { replacements: periodo(req), type: QueryTypes.SELECT })
+    res.json({ dados })
+})
+const produtosMaisVendidos = handler(async (req, res) => {
+    const dados = await db.query("SELECT prod.codProduto, prod.nome produto, SUM(ip.quantidade) quantidade, SUM(ip.subtotal) subtotal FROM itens_pedido ip JOIN produtos prod ON ip.idProduto=prod.codProduto JOIN pedidos p ON ip.idPedido=p.codPedido WHERE p.status NOT IN ('PENDENTE','CANCELADO') AND p.dataPedido BETWEEN :inicio AND :fim GROUP BY prod.codProduto,prod.nome ORDER BY quantidade DESC,prod.codProduto ASC LIMIT 10", { replacements: periodo(req), type: QueryTypes.SELECT })
+    res.json({ dados, demonstracao: true })
+})
+module.exports={dashboard,vendasPorCategoria,faturamentoMensal,situacaoEstoque,pedidosPorStatus,produtosMaisVendidos}

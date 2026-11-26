@@ -33,6 +33,7 @@ const Api = {
   put: (ep, body) => Api.request(ep, { method: 'PUT', body: JSON.stringify(body) }),
   patch: (ep, body) => Api.request(ep, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (ep) => Api.request(ep, { method: 'DELETE' }),
+  enviarImagem: arquivo => Api.request('/admin/imagens', { method: 'POST', headers: { 'Content-Type': arquivo.type }, body: arquivo }),
 
   // Endpoints específicos
   login: (email, senha) => Api.post('/login', { email, senha }),

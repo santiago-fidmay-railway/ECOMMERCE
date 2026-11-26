@@ -7,10 +7,7 @@ const Loja = {
   },
   moeda: valor => Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
   imagem(src) {
-    if (!src) return Auth.url('assets/images/placeholder.svg');
-    if (/^(?:\.\.\/)*imagens\//.test(src)) return new URL(src.replace(/^(?:\.\.\/)*imagens\//, '../imagens/'), Auth.url()).href;
-    try { const url = new URL(src, window.location.href); return ['http:', 'https:'].includes(url.protocol) ? url.href : Auth.url('assets/images/placeholder.svg'); }
-    catch { return Auth.url('assets/images/placeholder.svg'); }
+    return Auth.imagem(src);
   },
   compararIds() {
     try { const lista = JSON.parse(localStorage.getItem('sk_compare') || '[]'); return Array.isArray(lista) ? lista.filter(id => Number.isSafeInteger(id) && id > 0).slice(0, 3) : []; }
@@ -48,7 +45,7 @@ const Loja = {
 document.addEventListener('DOMContentLoaded', () => {
   const menu = document.getElementById('navMenu');
   if (menu) for (const [pagina, titulo] of [['quiz', 'Descubra'], ['marcas', 'Marcas']]) {
-    if (menu.querySelector(`[data-loja="${pagina}"]`)) continue;
+    if (menu.querySelector(`[data-loja="${pagina}"]`) || [...menu.querySelectorAll('a')].some(link => link.textContent.trim() === titulo)) continue;
     const link = Loja.el('a', 'navbar-link', titulo); link.href = Auth.url(`pages/${pagina}.html`); link.dataset.loja = pagina; menu.appendChild(link);
   }
   const sidebar = document.querySelector('.conta-sidebar');

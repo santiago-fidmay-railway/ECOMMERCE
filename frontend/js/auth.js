@@ -12,6 +12,18 @@ const Auth = {
     return new URL(caminho, frontendBaseUrl).href;
   },
 
+  imagem(src) {
+    const fallback = this.url('assets/images/placeholder.svg');
+    if (!src) return fallback;
+    if (/^\/api\/midias\/[0-9a-f-]+\.webp$/.test(src)) {
+      const base = window.SGFRUN_CONFIG?.apiBase || 'http://localhost:3001/api';
+      return new URL(src, base).href;
+    }
+    if (/^(?:\.\.\/)*imagens\//.test(src)) return new URL(src.replace(/^(?:\.\.\/)*imagens\//, '../imagens/'), this.url()).href;
+    try { const url = new URL(src, window.location.href); return ['http:', 'https:'].includes(url.protocol) ? url.href : fallback; }
+    catch { return fallback; }
+  },
+
   clearSession() {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
@@ -111,6 +123,15 @@ function atualizarNavbar() {
     btnLogin.style.color = 'var(--accent-primary)';
   }
   const menu = document.getElementById('navMenu');
+  if (menu && !menu.querySelector('[data-criador]')) {
+    const link = document.createElement('a');
+    link.className = 'navbar-link'; link.dataset.criador = '';
+    link.href = Auth.url('pages/criador.html'); link.textContent = 'O criador';
+    if (window.location.pathname.replace(/\.html$/, '').endsWith('/criador')) {
+      link.classList.add('active'); link.setAttribute('aria-current', 'page');
+    }
+    menu.appendChild(link);
+  }
   if (menu && Auth.isLoggedIn() && Auth.isAdmin() && !document.getElementById('linkAdmin')) {
     const link = document.createElement('a');
     link.id = 'linkAdmin';

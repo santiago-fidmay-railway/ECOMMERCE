@@ -19,6 +19,7 @@ const youtube = valor => {
 }
 const urlPublica = valor => {
     const str = texto(valor, 1000, true)
+    if (/^\/api\/midias\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\.webp$/.test(str)) return str
     try { const u = new URL(str); if (['https:', 'http:'].includes(u.protocol)) return u.href } catch { /* caminho local abaixo */ }
     if (/^(?:\.\.\/)*(?:imagens|assets)\/[a-zA-Z0-9_./ -]+$/.test(str) && !str.includes('..', str.lastIndexOf('/') + 1)) return str
     falhar(400, 'Endereço de mídia inválido.')

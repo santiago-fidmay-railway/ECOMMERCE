@@ -18,7 +18,7 @@ async function build() {
     await fs.cp(path.join(root, 'videos'), path.join(destino, 'videos'), { recursive: true })
     await fs.writeFile(path.join(destino, 'js/config.js'), 'window.SGFRUN_CONFIG = ' + JSON.stringify({ apiBase: url.href.replace(/\/$/, '') }) + ';\n')
     const sitemapUrl = process.env.SITE_URL ? new URL(process.env.SITE_URL) : null
-    const rotas = ['', 'pages/catalogo.html', 'pages/quiz.html', 'pages/comparar.html', 'pages/marcas.html']
+    const rotas = ['', 'pages/catalogo.html', 'pages/quiz.html', 'pages/comparar.html', 'pages/marcas.html', 'pages/criador.html']
     if (sitemapUrl) {
         const escape = s => s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')
         await fs.writeFile(path.join(destino, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + rotas.map(rota => `<url><loc>${escape(new URL(rota, sitemapUrl).href)}</loc></url>`).join('') + '</urlset>')
