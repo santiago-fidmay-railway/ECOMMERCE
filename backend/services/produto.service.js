@@ -4,7 +4,7 @@ const { falhar, texto, youtube, urlPublica, id } = require('../utils/api.util')
 
 function validarFicha(ficha) {
     if (!ficha || typeof ficha !== 'object' || Array.isArray(ficha)) falhar(400, 'Ficha técnica inválida.')
-    const campos = ['peso_g', 'drop_mm', 'placa', 'finalidades', 'superficie', 'amortecimento', 'fonte']
+    const campos = ['peso_g', 'drop_mm', 'placa', 'finalidades', 'superficie', 'amortecimento', 'fonte', 'peso_referencia', 'placa_descricao', 'observacoes', 'fontes']
     if (Object.keys(ficha).some(campo => !campos.includes(campo))) falhar(400, 'Campo de ficha técnica não reconhecido.')
     const dados = {}
     for (const [campo, max] of [['peso_g', 2000], ['drop_mm', 30]]) if (ficha[campo] != null && ficha[campo] !== '') {
@@ -16,14 +16,21 @@ function validarFicha(ficha) {
         if (!Array.isArray(ficha.finalidades) || ficha.finalidades.some(v => !['DIARIO', 'VELOCIDADE', 'PROVA', 'ACADEMIA'].includes(v))) falhar(400, 'Finalidade inválida.')
         dados.finalidades = [...new Set(ficha.finalidades)]
     }
-    for (const campo of ['superficie', 'amortecimento']) if (ficha[campo]) dados[campo] = texto(ficha[campo], 80)
+    for (const [campo, limite] of [['superficie', 80], ['amortecimento', 80], ['peso_referencia', 150], ['placa_descricao', 150], ['observacoes', 1000]]) if (ficha[campo]) dados[campo] = texto(ficha[campo], limite)
+    const validarFonte = valor => {
+        let url
+        try { url = new URL(valor) } catch { falhar(400, 'Fonte da ficha inválida.') }
+        const dominios = ['adidas.com.br','adidas.com','asics.com.br','asics.com','newbalance.com.br','newbalance.com','nike.com.br','nike.com','olympikus.com.br']
+        if (url.protocol !== 'https:' || url.username || url.password || !dominios.some(d => url.hostname === d || url.hostname.endsWith('.' + d))) falhar(400, 'Use uma fonte HTTPS do site oficial de uma das marcas do catálogo.')
+        return url.href
+    }
+    if (ficha.fontes !== undefined) {
+        if (!Array.isArray(ficha.fontes) || ficha.fontes.length > 5) falhar(400, 'Informe até cinco fontes complementares.')
+        if (ficha.fontes.length) dados.fontes = [...new Set(ficha.fontes.map(validarFonte))]
+    }
     if (Object.keys(dados).length) {
         if (!ficha.fonte) falhar(400, 'Informe a fonte oficial dos dados técnicos.')
-        let fonte
-        try { fonte = new URL(ficha.fonte) } catch { falhar(400, 'Fonte da ficha inválida.') }
-        const dominios = ['adidas.com.br','adidas.com','asics.com.br','asics.com','newbalance.com.br','newbalance.com','nike.com.br','nike.com','olympikus.com.br']
-        if (fonte.protocol !== 'https:' || !dominios.some(d => fonte.hostname === d || fonte.hostname.endsWith('.' + d))) falhar(400, 'Use uma fonte HTTPS do site oficial de uma das marcas do catálogo.')
-        dados.fonte = fonte.href
+        dados.fonte = validarFonte(ficha.fonte)
     }
     return dados
 }

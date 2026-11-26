@@ -14,11 +14,12 @@ async function build() {
         await fs.cp(path.join(root, 'frontend', pasta), path.join(destino, pasta), { recursive: true })
     }
     await fs.copyFile(path.join(root, 'frontend/index.html'), path.join(destino, 'index.html'))
+    for (const arquivo of ['manifest.webmanifest', 'offline.html', 'sw.js']) await fs.copyFile(path.join(root, 'frontend', arquivo), path.join(destino, arquivo))
     await fs.cp(path.join(root, 'backend', 'imagens'), path.join(destino, 'imagens'), { recursive: true })
     await fs.cp(path.join(root, 'videos'), path.join(destino, 'videos'), { recursive: true })
     await fs.writeFile(path.join(destino, 'js/config.js'), 'window.SGFRUN_CONFIG = ' + JSON.stringify({ apiBase: url.href.replace(/\/$/, '') }) + ';\n')
     const sitemapUrl = process.env.SITE_URL ? new URL(process.env.SITE_URL) : null
-    const rotas = ['', 'pages/catalogo.html', 'pages/quiz.html', 'pages/comparar.html', 'pages/marcas.html', 'pages/criador.html']
+    const rotas = ['', 'pages/catalogo.html', 'pages/quiz.html', 'pages/comparar.html', 'pages/marcas.html', 'pages/criador.html', 'pages/app.html']
     if (sitemapUrl) {
         const escape = s => s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')
         await fs.writeFile(path.join(destino, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + rotas.map(rota => `<url><loc>${escape(new URL(rota, sitemapUrl).href)}</loc></url>`).join('') + '</urlset>')
@@ -31,6 +32,17 @@ async function build() {
         }
     }
     await conferir(destino)
+    const hash = require('node:crypto').createHash('sha256')
+    async function assinar(dir) {
+        for (const nome of (await fs.readdir(dir)).sort()) {
+            const arquivo = path.join(dir, nome)
+            if ((await fs.stat(arquivo)).isDirectory()) await assinar(arquivo)
+            else { hash.update(path.relative(destino, arquivo).replaceAll(path.sep, '/')); hash.update(await fs.readFile(arquivo)) }
+        }
+    }
+    await assinar(destino)
+    const worker = path.join(destino, 'sw.js')
+    await fs.writeFile(worker, (await fs.readFile(worker, 'utf8')).replace('__SGFRUN_BUILD__', hash.digest('hex').slice(0, 20)))
     console.log('Site preparado em dist/. Somente arquivos públicos foram incluídos.')
 }
 if (require.main === module) build().catch(err => { console.error(err.message); process.exitCode = 1 })

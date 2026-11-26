@@ -55,10 +55,18 @@ function renderizarProduto(p) {
   document.getElementById('pdpFavorite').onclick = () => Loja.favorito(p.codProduto);
   document.getElementById('pdpDescription').textContent = p.descricao || 'Confira as fotos, as opções disponíveis e o review deste modelo.';
   const ficha = p.fichaTecnica?.dados || {};
-  const campos = [['Peso', ficha.peso_g != null ? `${ficha.peso_g} g` : null], ['Drop', ficha.drop_mm != null ? `${ficha.drop_mm} mm` : null], ['Placa', ficha.placa == null ? null : ficha.placa ? 'Sim' : 'Não'], ['Amortecimento', ficha.amortecimento], ['Superfície', ficha.superficie], ['Finalidades', ficha.finalidades?.join(', ')]];
+  const campos = [['Peso', Loja.fichaPeso(ficha)], ['Drop', ficha.drop_mm != null ? `${ficha.drop_mm} mm` : null], ['Placa / estrutura de propulsão', Loja.fichaPlaca(ficha)], ['Amortecimento', ficha.amortecimento], ['Superfície', ficha.superficie], ['Finalidades', Loja.finalidades(ficha)]];
   const dl = document.getElementById('pdpFicha'); dl.replaceChildren();
   campos.forEach(([nome, valor]) => dl.append(Loja.el('dt', '', nome), Loja.el('dd', '', valor || 'Não informado')));
   const fonte = document.getElementById('pdpFonte'); fonte.hidden = !ficha.fonte; if (ficha.fonte) fonte.href = ficha.fonte;
+  let detalhes = document.getElementById('pdpFichaDetalhes');
+  if (!detalhes) { detalhes = Loja.el('div', 'loja-subtitle'); detalhes.id = 'pdpFichaDetalhes'; fonte.after(detalhes); }
+  detalhes.replaceChildren();
+  if (ficha.peso_g != null) detalhes.appendChild(Loja.el('p', '', 'Peso de referência de um pé; pode variar com a numeração, versão e fabricação.'));
+  if (ficha.observacoes) detalhes.appendChild(Loja.el('p', '', ficha.observacoes));
+  for (const [indice, url] of (ficha.fontes || []).entries()) {
+    const link = Loja.el('a', '', `Fonte oficial complementar ${indice + 1} ↗`); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.style.display = 'block'; detalhes.appendChild(link);
+  }
   renderizarReview(p);
   const historico = document.getElementById('pdpHistory'); historico.replaceChildren();
   if (!p.historicoPrecos?.length) historico.appendChild(Loja.el('p', 'loja-subtitle', 'O acompanhamento deste modelo ainda não começou.'));

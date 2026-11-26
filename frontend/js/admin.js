@@ -108,6 +108,7 @@ function editarProdutoAdmin(p) {
   document.getElementById('produtoSalvarCompleto').hidden = false;
   const ficha = p.fichaTecnica?.dados || {};
   Object.assign(dados, { fichaPeso: ficha.peso_g, fichaDrop: ficha.drop_mm, fichaPlaca: ficha.placa == null ? '' : String(ficha.placa), fichaAmortecimento: ficha.amortecimento, fichaSuperficie: ficha.superficie, fichaFonte: ficha.fonte });
+  Object.assign(dados, { fichaPesoReferencia: ficha.peso_referencia, fichaPlacaDescricao: ficha.placa_descricao, fichaObservacoes: ficha.observacoes, fichaFontes: (ficha.fontes || []).join('\n') });
   const review = (p.midias || []).find(m => m.tipo === 'REVIEW'); dados.produtoReview = review?.url; dados.produtoCredito = review?.credito;
   dados.produtoImagens = (p.midias || []).filter(m => m.tipo === 'IMAGEM').sort((a,b) => a.ordem-b.ordem).map(m => m.url).join('\n');
   for (const [id, valor] of Object.entries(dados)) document.getElementById(id).value = valor ?? '';
@@ -121,6 +122,8 @@ async function salvarProdutoAdmin(event) {
   await executarAdmin(async () => {
     await ImagensAdmin.salvar();
     const ficha = {};
+    for (const [campo, origem] of [['peso_referencia', 'fichaPesoReferencia'], ['placa_descricao', 'fichaPlacaDescricao'], ['observacoes', 'fichaObservacoes']]) if (valorAdmin(origem)) ficha[campo] = valorAdmin(origem);
+    const fontes = valorAdmin('fichaFontes').split('\n').map(v => v.trim()).filter(Boolean); if (fontes.length) ficha.fontes = fontes;
     if (valorAdmin('fichaPeso')) ficha.peso_g = Number(valorAdmin('fichaPeso')); if (valorAdmin('fichaDrop')) ficha.drop_mm = Number(valorAdmin('fichaDrop'));
     if (valorAdmin('fichaPlaca')) ficha.placa = valorAdmin('fichaPlaca') === 'true';
     for (const [campo, origem] of [['amortecimento', 'fichaAmortecimento'], ['superficie', 'fichaSuperficie']]) if (valorAdmin(origem)) ficha[campo] = valorAdmin(origem);

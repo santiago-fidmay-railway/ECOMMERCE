@@ -145,7 +145,35 @@ Veja a [documentação de volumes do Railway](https://docs.railway.com/volumes).
 
 A visão geral apresenta valor mensal confirmado, subtotal por categoria, pedidos por status, os dez produtos mais vendidos por unidades e situação do estoque. Os filtros de data usam o dia em São Paulo e a data de criação do pedido. O ranking exclui pedidos pendentes e cancelados; o gráfico por status inclui todos. O estoque mostra o saldo atual dos produtos ativos, independentemente do período. Tabelas e exportação CSV permitem consultar os mesmos dados, inclusive quando não há valores para desenhar o gráfico.
 
+## Aplicativo instalável (PWA)
+
+A SGF RUN pode ser instalada pelo próprio navegador, sem alterar a arquitetura: arquivos estáticos na Vercel e API/MySQL no Railway. `pages/app.html` apresenta as instruções para Android e iPhone; o botão de instalação só aparece quando o navegador disponibiliza o convite. O manifesto usa o nome SGF RUN, abertura `standalone`, ícones PNG de 192/512 pixels, ícone maskable e ícone Apple de 180 pixels.
+
+Todas as páginas do frontend referenciam o manifesto e `js/pwa.js`. O build copia o manifesto, `offline.html` e `sw.js` para `dist/`; cada build recebe uma versão calculada pelo hash do conteúdo público, incluindo a configuração da API. A Vercel entrega `sw.js` sem cache HTTP, para permitir a detecção de versões novas.
+
+O service worker armazena somente a tela de reconexão e dois ícones. Não armazena páginas visitadas, dados da API, preços, estoque, credenciais, páginas administrativas, uploads ou vídeos. HTML, JS e CSS continuam vindo da rede. Uma navegação sem conexão apresenta a tela de reconexão; operações de compra não são enfileiradas nem reenviadas automaticamente.
+
+Atualizações aguardam a ação **Atualizar agora**. A ação **Depois** mantém a versão em espera. Se a página tiver formulário, uma confirmação alerta sobre dados não salvos. Apenas a aba que solicitou a atualização é recarregada. Ao reabrir o app, o navegador pode ativar uma atualização quando não houver outras abas usando a versão anterior.
+
+Teste no computador por `http://localhost:5501/pages/app.html` com `npm run dev` e `FRONTEND_PORT=5501`. Para validar no celular, use uma publicação HTTPS da Vercel: o `localhost` do telefone não aponta para o computador e um IP comum da rede por HTTP não habilita instalação/service worker. A instalação real em Android e iPhone deve ser validada nos aparelhos; os testes automatizados cobrem manifesto, requisitos do Chrome, atualização e comportamento offline.
+
+As instruções e recursos seguem a [documentação de instalação de PWAs](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable). Esta configuração não publica automaticamente na Play Store ou na App Store.
+
 ## Manutenção
+
+### Fichas técnicas do catálogo
+
+`backend/data/fichas-tecnicas.js` contém os dados pesquisados nos sites oficiais das cinco marcas em 25/11/2026. Cada registro inclui o código e nome exato do modelo, peso de um pé com referência de numeração, drop, estrutura de propulsão, amortecimento, superfície, finalidades e URLs oficiais. Pesos não são diretamente comparáveis entre numerações diferentes. Os valores são os publicados pelo fabricante, não medições independentes.
+
+A ficha distingue placas contínuas de hastes ENERGYRODS e estrutura ENERGYRIM. O cadastro Metaspeed Tokyo reúne SKY/EDGE: a página explica a diferença e usa apenas especificações comuns às duas versões. O Corre Supra usa dados da primeira geração, sem confundir com o Supra 2. O Boston 13 registra explicitamente que sua referência de peso é a edição EQT da fonte consultada.
+
+Na inicialização da API, a migração `20261125-fichas-oficiais-catalogo` preenche fichas ausentes ou vazias de produtos com código e nome compatíveis. Inclui os nomes legados Olympikus Turbo/Supra. Não altera preço, fotos, opções de tamanho, pedidos ou saldos; fichas já preenchidas manualmente são preservadas. A carga de demonstração usa a mesma rotina para os modelos criados depois das migrações. Os campos de referência e fontes complementares também podem ser editados no painel.
+
+### QR code para instalação
+
+O QR code em `frontend/assets/images/instalar-app-qr.png` (também disponível em SVG) é servido pelo próprio site e aponta para `https://ecommerce-frontend-rosy-phi.vercel.app/pages/app`. Ele aparece na página inicial e nas instruções de instalação. É um acesso ao PWA, sem arquivo APK ou dependência da Play Store. A versão publicada do PWA precisa estar ativa para o destino funcionar; se o domínio mudar, gere novamente as duas imagens com `node tools/gerar-qr-app.js https://NOVO-DOMINIO/pages/app`. A suíte de testes decodifica o QR code e verifica o endereço.
+
+### Rotina de manutenção
 
 - Cada `git push` na branch principal redeploya os dois serviços.
 - Backups: `npm.cmd --prefix backend run backup` com a conexão apontando para o Railway. O sistema de arquivos do container é descartável; guarde as exportações fora dele.

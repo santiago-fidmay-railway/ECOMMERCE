@@ -1,0 +1,24 @@
+.app-page { max-width: 1000px; padding-top: 4rem; padding-bottom: 4rem; }
+.app-hero { text-align: center; max-width: 700px; margin: 0 auto 3rem; }
+.app-hero > img { margin: 0 auto 1.5rem; border-radius: 26px; border: 1px solid #ffffff20; box-shadow: 0 12px 60px #3b82f620; }
+.app-eyebrow { font-size: .7rem; letter-spacing: .16em; font-weight: 600; color: #91baff; }
+.app-hero h1 { font-family: var(--font-display); font-size: clamp(2.5rem, 6vw, 4rem); letter-spacing: -.04em; line-height: 1.1; margin: 1rem 0 1.5rem; }
+.app-hero > p { color: #a4adc0; line-height: 1.9; margin-bottom: 1rem; }
+#appStatus { font-size: .85rem; }
+.app-actions { display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.app-actions [hidden] { display: none; }
+.app-platforms { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.app-platforms article, .app-note { padding: 2rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); background: var(--bg-card); }
+.app-page h2 { font-family: var(--font-display); font-size: 1.4rem; margin: .75rem 0 1rem; }
+.app-platforms ol { list-style: decimal; padding-left: 1.2rem; color: #a4adc0; }
+.app-platforms li { padding-left: .3rem; margin-bottom: 1rem; }
+.app-platforms strong, .app-note strong { color: #e1e5ef; }
+.app-note { margin-top: 1rem; }
+.app-note p { color: #a4adc0; margin-bottom: 1rem; line-height: 1.8; }
+.app-note a { color: #91baff; }
+.app-qr { display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 2rem; margin-bottom: 2rem; padding: 2rem; border: 1px solid #3b82f633; border-radius: var(--radius-xl); background: #101729; }
+.app-qr img { padding: .5rem; background: #fff; border-radius: 14px; }
+.app-qr p { color: #a4adc0; margin-bottom: .75rem; }
+.app-qr a { color: #91baff; text-decoration: underline; }
+@media(max-width:650px) { .app-qr { grid-template-columns: 1fr; padding: 1.5rem; text-align: center; } .app-qr img { margin: auto; } }
+@media(max-width:650px) { .app-page { padding-top: 2rem; } .app-platforms { grid-template-columns: 1fr; } .app-platforms article, .app-note { padding: 1.5rem; } }

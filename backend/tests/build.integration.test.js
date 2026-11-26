@@ -10,6 +10,12 @@ test('build contém só arquivos públicos, configuração da API e links locais
     const config=await fs.readFile(path.join(dir,'js/config.js'),'utf8')
     assert.match(config,/https:\/\/api.example.test\/api/)
     await fs.access(path.join(dir,'imagens','boston13-1.webp'))
+    const manifesto = JSON.parse(await fs.readFile(path.join(dir, 'manifest.webmanifest'), 'utf8'))
+    for (const icone of manifesto.icons) await fs.access(path.join(dir, icone.src))
+    await fs.access(path.join(dir, 'offline.html'))
+    const worker = await fs.readFile(path.join(dir, 'sw.js'), 'utf8')
+    assert.doesNotMatch(worker, /__SGFRUN_BUILD__/)
+    assert.match(worker, /const VERSION = '[0-9a-f]{20}'/)
     for(const nome of ['.env','backend','.backups','node_modules']) {
         await assert.rejects(fs.access(path.join(dir,nome)))
     }
@@ -17,6 +23,8 @@ test('build contém só arquivos públicos, configuração da API e links locais
     const ausentes=[]
     for(const pagina of paginas){
         const html=await fs.readFile(path.join(dir,pagina),'utf8')
+        assert.match(html, /rel="manifest"/)
+        assert.match(html, /js\/pwa\.js/)
         for(const [,ref] of html.matchAll(/(?:src|href)="([^"]+)"/g)){
             if(!ref||ref.startsWith('#')||ref.includes('${')||/^(https?:|mailto:|data:|javascript:)/.test(ref))continue
             const url=new URL(ref,'https://site.example.test/'+pagina)

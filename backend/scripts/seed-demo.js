@@ -48,6 +48,7 @@ async function seedDemo() {
             }
         }
     })
+    await db.transaction(transaction => require('../services/fichas-catalogo.service').preencherFichasCatalogo(transaction))
     console.log(`${criados} produto(s) de demonstração criado(s). Registros existentes preservados.`)
     return criados
 }

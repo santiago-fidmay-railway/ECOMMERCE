@@ -63,6 +63,11 @@ async function migrar() {
             }
             await Migracao.create({ nome: terceira }, { transaction })
         })
+        const fichasOficiais = '20261125-fichas-oficiais-catalogo'
+        if (!await Migracao.findByPk(fichasOficiais)) await db.transaction(async transaction => {
+            await require('../services/fichas-catalogo.service').preencherFichasCatalogo(transaction)
+            await Migracao.create({ nome: fichasOficiais }, { transaction })
+        })
         const referenciasItens = await db.getQueryInterface().getForeignKeyReferencesForTable('itens_pedido')
         if (!referenciasItens.some(ref => ref.columnName === 'idVariante')) await db.getQueryInterface().addConstraint('itens_pedido', {
             fields: ['idVariante'], type: 'foreign key', name: 'fk_itens_variante', references: { table: 'produto_variantes', field: 'codVariante' }, onDelete: 'RESTRICT', onUpdate: 'CASCADE'

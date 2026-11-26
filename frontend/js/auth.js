@@ -123,6 +123,12 @@ function atualizarNavbar() {
     btnLogin.style.color = 'var(--accent-primary)';
   }
   const menu = document.getElementById('navMenu');
+  if (menu && !menu.querySelector('[data-app]')) {
+    const link = document.createElement('a');
+    link.className = 'navbar-link'; link.dataset.app = '';
+    link.href = Auth.url('pages/app.html'); link.textContent = 'Instalar app';
+    menu.appendChild(link);
+  }
   if (menu && !menu.querySelector('[data-criador]')) {
     const link = document.createElement('a');
     link.className = 'navbar-link'; link.dataset.criador = '';

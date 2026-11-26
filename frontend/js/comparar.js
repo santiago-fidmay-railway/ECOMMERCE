@@ -32,9 +32,9 @@ async function renderizarComparador() {
     ['Marca', p => p.marca], ['Preço atual', p => Loja.moeda(p.preco_promocional ?? p.preco)], ['Categoria', p => p.categoriaProduto?.nome],
     ['Disponibilidade', p => p.estoqueProduto?.quantidade > 0 ? 'Disponível' : 'Aguardando reposição'],
     ['Tamanhos com estoque', p => [...new Set((p.variantes || []).filter(v => v.quantidade > 0).map(v => v.tamanho))].join(', ') || 'Nenhum'],
-    ['Peso', p => p.fichaTecnica?.dados?.peso_g != null ? `${p.fichaTecnica.dados.peso_g} g` : null], ['Drop', p => p.fichaTecnica?.dados?.drop_mm != null ? `${p.fichaTecnica.dados.drop_mm} mm` : null],
-    ['Placa', p => p.fichaTecnica?.dados?.placa == null ? null : p.fichaTecnica.dados.placa ? 'Sim' : 'Não'],
-    ['Amortecimento', p => p.fichaTecnica?.dados?.amortecimento], ['Finalidades', p => p.fichaTecnica?.dados?.finalidades?.join(', ')],
+    ['Peso', p => Loja.fichaPeso(p.fichaTecnica?.dados)], ['Drop', p => p.fichaTecnica?.dados?.drop_mm != null ? `${p.fichaTecnica.dados.drop_mm} mm` : null],
+    ['Placa / estrutura', p => Loja.fichaPlaca(p.fichaTecnica?.dados)],
+    ['Amortecimento', p => p.fichaTecnica?.dados?.amortecimento], ['Finalidades', p => Loja.finalidades(p.fichaTecnica?.dados)],
     ['Avaliações', p => p.avaliacoes?.total ? `${Number(p.avaliacoes.media).toFixed(1)}/5 · ${p.avaliacoes.total} avaliações` : 'Ainda sem avaliações']
   ];
   linhas.forEach(([titulo, obter]) => { const linha = Loja.el('tr'); const th = Loja.el('th', '', titulo); th.scope = 'row'; linha.appendChild(th); produtos.forEach(p => linha.appendChild(Loja.el('td', '', obter(p) || 'Não informado'))); body.appendChild(linha); });

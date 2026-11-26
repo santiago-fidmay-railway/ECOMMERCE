@@ -6,6 +6,9 @@ const Loja = {
     return el;
   },
   moeda: valor => Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  fichaPeso: ficha => ficha?.peso_g == null ? null : `${ficha.peso_g} g${ficha.peso_referencia ? ` (aprox.; ${ficha.peso_referencia})` : ''}`,
+  fichaPlaca: ficha => ficha?.placa_descricao || (ficha?.placa == null ? null : ficha.placa ? 'Sim' : 'Não'),
+  finalidades: ficha => ficha?.finalidades?.map(valor => ({ DIARIO: 'Treinos diários', VELOCIDADE: 'Treinos de velocidade', PROVA: 'Provas', ACADEMIA: 'Academia' })[valor] || valor).join(', '),
   imagem(src) {
     return Auth.imagem(src);
   },
